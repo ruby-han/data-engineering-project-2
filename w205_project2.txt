@@ -1,0 +1,112 @@
+Command lines
+
+--------------------
+Perform below commands only once:
+
+# copy in yml file
+cp ~/w205/course-content/08-Querying-Data/docker-compose.yml .
+
+# download the assessments file
+curl -L -o assessment-attempts-20180128-121051-nested.json https://goo.gl/ME6hjp
+
+--------------------
+Docker
+
+# change into project 2 directory
+cd ~w205/project-2-ruby-han/
+
+# bring up cluster and check
+docker-compose up -d
+
+# check stray containers
+docker-compose ps
+
+# remove stray containers
+docker rm -f <NAMES>
+
+# do not remove below
+0aacfde6644a   gcr.io/inverting-proxy/agent       "/bin/sh -c '/opt/bi…"   2 hours ago     Up 2 hours                                                                                          proxy-agent
+
+# check containers
+docker ps -a
+
+# should output below if correct
+CONTAINER ID   IMAGE                              COMMAND                  CREATED         STATUS         PORTS                                                                                NAMES
+a7c92bf83ade   confluentinc/cp-kafka:latest       "/etc/confluent/dock…"   5 minutes ago   Up 5 minutes   9092/tcp, 29092/tcp                                                                  project-2-ruby-han_kafka_1
+2ead54715098   midsw205/spark-python:0.0.5        "docker-entrypoint.s…"   5 minutes ago   Up 5 minutes   0.0.0.0:8888->8888/tcp                                                               project-2-ruby-han_spark_1
+24aa343687f5   midsw205/cdh-minimal:latest        "cdh_startup_script.…"   5 minutes ago   Up 5 minutes   8020/tcp, 8088/tcp, 8888/tcp, 9090/tcp, 11000/tcp, 11443/tcp, 19888/tcp, 50070/tcp   project-2-ruby-han_cloudera_1
+20c60035ecd8   midsw205/base:latest               "/bin/bash"              5 minutes ago   Up 5 minutes   8888/tcp                                                                             project-2-ruby-han_mids_1
+b5c8374014f9   confluentinc/cp-zookeeper:latest   "/etc/confluent/dock…"   5 minutes ago   Up 5 minutes   2181/tcp, 2888/tcp, 3888/tcp, 32181/tcp                                              project-2-ruby-han_zookeeper_1
+0aacfde6644a   gcr.io/inverting-proxy/agent       "/bin/sh -c '/opt/bi…"   2 hours ago     Up 2 hours                                                                                          proxy-agent
+
+--------------------
+Connecting Jupyter Notebook to Pyspark
+
+# check docker-compose.yml file to ensure that spark container has an expose section and ports section with below:
+expose:
+  - "8888"
+ports:
+  - "8888:8888"
+
+# execute a bsh shell into spark container
+docker-compose exec spark bash
+
+# create symbolic link from spark directory to /w205
+ln -s /w205 w205
+
+# exit container
+exit
+
+# use jupyter notebook for pyspark kernel
+# set ip address to 0.0.0.0
+docker-compose exec spark env PYSPARK_DRIVER_PYTHON=jupyter PYSPARK_DRIVER_PYTHON_OPTS='notebook --no-browser --port 8888 --ip 0.0.0.0 --allow-root' pyspark
+
+# copy URL and change IP address to external IP address for Google Cloud Virtual Machine
+http://35.230.62.182:8888/?token=696f835d5d3612d431aeaaf8cf7af8ffebb15402cc49b7a9
+
+# to access jupyter notebook, open Google Chrome brower in incognito mode using above URL
+
+----------------
+only once:
+----------------
+copy in yml file
+cp ~/w205/course-content/08-Querying-Data/docker-compose.yml .
+
+download the assessments file
+
+curl -L -o assessment-attempts-20180128-121051-nested.json https://goo.gl/ME6hjp
+
+-----------------------------------
+every time we bring up the cluster:
+-----------------------------------
+bring up the cluster and check
+
+docker-compose up -d
+docker-compose ps
+docker ps -a
+
+docker-compose exec spark bash
+ln -s /w205 w205
+exit
+
+docker-compose exec spark env PYSPARK_DRIVER_PYTHON=jupyter PYSPARK_DRIVER_PYTHON_OPTS='notebook --no-browser --port 8888 --ip 0.0.0.0 --allow-root' pyspark
+
+35.230.97.0
+http://35.230.97.0:8888/?token=f32939048e56c7e80290dd038f2d9e5dcc4895f7cad55046
+
+docker-compose exec cloudera hadoop fs -ls /tmp/
+
+docker-compose exec kafka kafka-topics --create --topic assessments --partitions 1 --replication-factor 1 --if-not-exists --zookeeper zookeeper:32181
+
+docker-compose exec mids bash -c "cat /w205/project-2-ruby-han/assessment-attempts-20180128-121051-nested.json | jq '.[]' -c | kafkacat -P -b kafka:29092 -t assessments"
+
+docker-compose exec mids bash -c "kafkacat -C -b kafka:29092 -t assessments -o beginning -e"
+
+docker
+docker-compose exec cloudera hadoop fs -ls /tmp/assessments
+docker-compose exec cloudera hadoop fs -ls /tmp/my_questions
+
+docker-compose down
+docker-compose ps
+docker ps -a
+
